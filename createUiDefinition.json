@@ -1,0 +1,120 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+  "handler": "Microsoft.Compute.MultiVm",
+  "version": "0.1.2-preview",
+  "parameters": {
+    "basics": [
+      {
+        "name": "name",
+        "type": "Microsoft.Common.TextBox",
+        "label": "Name",
+        "toolTip": "Name of the virtual machine to that will be provisioned.  This should be less than 15 characters in length.",
+        "constraints": {
+          "required": true,
+          "regex": "^[a-z][a-z0-9-]{1,14}$",
+          "validationMessage": "Name should be between 1 and 15 characters in length"
+        }
+      },
+      {
+        "name": "vmstorageperf",
+        "type": "Microsoft.Common.DropDown",
+        "label": "VM disk type",
+        "toolTip": "Premium disks (SSD) are backed by solid state drives and offer consistent, low-latency performance. They provide the best balance between price and performance, and are ideal for I/O-intensive applications and production workloads. Standard disks (HDD) are backed by magnetic drives and are preferable for applications where data is accessed infrequently. Zone-redundant disks are backed by Zone redundant storage (ZRS) that replicates your data across multiple zones and are available even if a single zone is down.",
+        "defaultValue": "Premium SSD",
+        "constraints": {
+          "allowedValues": [
+            {
+              "label": "Premium SSD",
+              "value": "Premium"
+            },
+            {
+              "label": "Standard HDD",
+              "value": "Standard"
+            }
+          ]
+        }
+      },
+      {
+        "name": "username",
+        "type": "Microsoft.Compute.UserNameTextBox",
+        "label": "VM user name",
+        "toolTip": "Root administrator name for the virtual machine",
+        "osPlatform": "Linux",
+        "constraints": {
+          "required": true,
+          "regex": "^[a-z][a-z0-9-]{1,15}$",
+          "validationMessage": "Name should be between 1 and 15 characters in length"
+        }
+      },
+      {
+        "name": "adminCredentials",
+        "type": "Microsoft.Compute.CredentialsCombo",
+        "label": {
+          "authenticationType": "Authentication type",
+          "password": "Password",
+          "confirmPassword": "Confirm password",
+          "sshPublicKey": "SSH public key"
+        },
+        "toolTip": {
+          "authenticationType": "",
+          "password": "VM password must be 12 characters and have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character.",
+          "sshPublicKey": ""
+        },
+        "constraints": {
+          "required": true
+        },
+        "options": {
+          "hideConfirmation": false
+        },
+        "osPlatform": "Linux"
+      }
+    ],
+    "steps": [
+      {
+        "name": "size",
+        "label": "Size",
+        "subLabel": {
+          "preValidation": "Choose virtual machine size",
+          "postValidation": "Done"
+        },
+        "bladeTitle": "Size",
+        "elements": [
+          {
+            "name": "vmSize",
+            "type": "Microsoft.Compute.SizeSelector",
+            "label": "Virtual machine size",
+            "toolTip": "",
+            "recommendedSizes": [
+              "Standard_D2s_v3",
+              "Standard_D4s_v3",
+              "Standard_E2s_v3"
+            ],
+            "constraints": {
+              "allowedSizes": [
+                "Standard_D2s_v3",
+                "Standard_D4s_v3",
+                "Standard_D8s_v3",
+                "Standard_D16s_v3",
+                "Standard_D32s_v3",
+                "Standard_E2s_v3",
+                "Standard_E4s_v3"
+              ]
+            },
+            "osPlatform": "Linux",
+            "count": 1
+          }
+        ]
+      }
+    ],
+    "outputs": {
+      "vmName": "[basics('name')]",
+      "authType": "[basics('adminCredentials').authenticationType]",
+      "adminUsername": "[basics('username')]",
+      "adminPassword": "[basics('adminCredentials').password]",
+      "adminSSHKey": "[basics('adminCredentials').sshPublicKey]",
+      "vmStoragePerformance": "[basics('vmstorageperf')]",
+      "vmSize": "[steps('size').vmSize]",
+      "location": "[location()]"
+    }
+  }
+}
