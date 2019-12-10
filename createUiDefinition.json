@@ -1,120 +1,415 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
-  "handler": "Microsoft.Compute.MultiVm",
-  "version": "0.1.2-preview",
-  "parameters": {
-    "basics": [
-      {
-        "name": "name",
-        "type": "Microsoft.Common.TextBox",
-        "label": "Name",
-        "toolTip": "Name of the virtual machine to that will be provisioned.  This should be less than 15 characters in length.",
-        "constraints": {
-          "required": true,
-          "regex": "^[a-z][a-z0-9-]{1,14}$",
-          "validationMessage": "Name should be between 1 and 15 characters in length"
-        }
-      },
-      {
-        "name": "vmstorageperf",
-        "type": "Microsoft.Common.DropDown",
-        "label": "VM disk type",
-        "toolTip": "Premium disks (SSD) are backed by solid state drives and offer consistent, low-latency performance. They provide the best balance between price and performance, and are ideal for I/O-intensive applications and production workloads. Standard disks (HDD) are backed by magnetic drives and are preferable for applications where data is accessed infrequently. Zone-redundant disks are backed by Zone redundant storage (ZRS) that replicates your data across multiple zones and are available even if a single zone is down.",
-        "defaultValue": "Premium SSD",
-        "constraints": {
-          "allowedValues": [
+    "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+    "handler": "Microsoft.Compute.MultiVm",
+    "version": "0.1.2-preview",
+    "parameters": {
+        "basics": [],
+        "steps": [
             {
-              "label": "Premium SSD",
-              "value": "Premium"
+                "label": "Resources",
+                "name": "resources",
+                "bladeTitle": "Resources",
+                "bladeSubtitle": "Subtitle",
+                "subLabel": {
+                    "preValidation": "Configure Azure Resources",
+                    "postValidation": "Done"
+                },
+                "elements": [
+                    {
+                        "label": "Virtual Machine",
+                        "name": "vm",
+                        "type": "Microsoft.Common.Section",
+                        "elements": [
+                            {
+                                "name": "info_vm_size",
+                                "type": "Microsoft.Common.TextBlock",
+                                "options": {
+                                    "text": "MultiChain requires a CPU with a high clock speed, which provides fast single-threaded performance. MultiChain can make optimal use of around 4 threads at most. If you require high transaction throughput, also consider an instance with a high IOPS value.",
+                                    "link": {
+                                        "label": "Additional information",
+                                        "uri": "https://docs.microsoft.com/en-us/azure/virtual-machines/linux/sizes"
+                                    }
+                                }
+                            },
+                            {
+                                "label": "Size",
+                                "name": "size",
+                                "type": "Microsoft.Compute.SizeSelector",
+                                "osPlatform": "Linux",
+                                "count": 1,
+                                "recommendedSizes": [
+                                    "Standard_B1s",
+                                    "Standard_B1ms",
+                                    "Standard_B2s",
+                                    "Standard_D2s_v3",
+                                    "Standard_D4s_v3",
+                                    "Standard_D8s_v3",
+                                    "Standard_F16s_v2"
+                                ]
+                            },
+                            {
+                                "name": "os_user",
+                                "type": "Microsoft.Compute.UserNameTextBox",
+                                "label": "Admin Username",
+                                "defaultValue": "mcadmin",
+                                "toolTip": "Enter the Username of the operating system admin user.",
+                                "constraints": {
+                                  "required": true,
+                                  "regex": "^\\b(?!(multichain|operator|daemon|sudo|www-data)\\b)[a-z0-9]+$",
+                                  "validationMessage": "Only alphanumeric characters are allowed. The value must be 1-30 characters long."
+                                },
+                                "osPlatform": "Linux",
+                                "visible": true
+                            },
+                            {
+                                "name": "os_credential",
+                                "type": "Microsoft.Compute.CredentialsCombo",
+                                "osPlatform": "Linux",
+                                "label": {
+                                    "authenticationType": "Authentication type",
+                                    "password": "Admin Password",
+                                    "confirmPassword": "Confirm password",
+                                    "sshPublicKey": "SSH public key"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "disk",
+                        "label": "Data Disk",
+                        "type": "Microsoft.Common.Section",
+                        "elements": [
+                            {
+                                "name": "info_disk_size",
+                                "type": "Microsoft.Common.TextBlock",
+                                "options": {
+                                    "text": "For a high transaction throughput MultiChain requires a high IOPS value. The available IOPS directly depends on the disk size.",
+                                    "link": {
+                                        "label": "Additional information",
+                                        "uri": "https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disks-types"
+                                    }
+                                }
+                            },
+                            {
+                                "label": "Size in GiB",
+                                "name": "disksize",
+                                "type": "Microsoft.Common.DropDown",
+                                "defaultValue": "128 GiB",
+                                "constraints": {
+                                    "required": true,
+                                    "allowedValues": [
+                                        {
+                                            "label": "32 GiB",
+                                            "value": "32"
+                                        },
+                                        {
+                                            "label": "64 GiB",
+                                            "value": "64"
+                                        },
+                                        {
+                                            "label": "128 GiB",
+                                            "value": "128"
+                                        },
+                                        {
+                                            "label": "256 GiB",
+                                            "value": "256"
+                                        },
+                                        {
+                                            "label": "512 GiB",
+                                            "value": "512"
+                                        },
+                                        {
+                                            "label": "1024 GiB",
+                                            "value": "1024"
+                                        },
+                                        {
+                                            "label": "2048 GiB",
+                                            "value": "2048"
+                                        },
+                                        {
+                                            "label": "4096 GiB",
+                                            "value": "4096"
+                                        },
+                                        {
+                                            "label": "8192 GiB",
+                                            "value": "8192"
+                                        },
+                                        {
+                                            "label": "16384 GiB",
+                                            "value": "16384"
+                                        },
+                                        {
+                                            "label": "32767 GiB",
+                                            "value": "32767"
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "network",
+                        "type": "Microsoft.Common.Section",
+                        "label": "Network",
+                        "elements": [
+                            {
+                                "name": "config",
+                                "type": "Microsoft.Network.PublicIpAddressCombo",
+                                "label": {
+                                    "publicIpAddress": "Public IP address",
+                                    "domainNameLabel": "Domain name label"
+                                },
+                                "toolTip": {
+                                    "publicIpAddress": "",
+                                    "domainNameLabel": ""
+                                },
+                                "defaultValue": {
+                                    "publicIpAddressName": "ip01",
+                                    "domainNameLabel": "mydomain"
+                                },
+                                "constraints": {
+                                    "required": {
+                                        "domainNameLabel": true
+                                    }
+                                },
+                                "options": {
+                                    "hideNone": true,
+                                    "hideDomainNameLabel": false,
+                                    "hideExisting": true
+                                }
+                            }
+                        ]
+                    }
+                ]
             },
             {
-              "label": "Standard HDD",
-              "value": "Standard"
+                "name": "multichain",
+                "label": "MultiChain Configuration",
+                "bladeTitle": "MultiChain Configuration",
+                "bladeSubtitle": "MultiChain Configuration",
+                "subLabel": {
+                    "preValidation": "Configure MultiChain",
+                    "postValidation": "Done"
+                },
+                "elements": [
+                    {
+                        "name": "basic",
+                        "label": "General Information",
+                        "type": "Microsoft.Common.Section",
+                        "elements": [
+                            {
+                                "name": "mode",
+                                "label": "Deployment Mode",
+                                "type": "Microsoft.Common.OptionsGroup",
+                                "defaultValue": "Create Network",
+                                "toolTip": "Choose if you want to create a new MultiChain network or if you want to join an existing one.",
+                                "constraints": {
+                                    "allowedValues": [
+                                        {
+                                            "label": "Create Network",
+                                            "value": "create"
+                                        },
+                                        {
+                                            "label": "Join Network",
+                                            "value": "join"
+                                        }
+                                    ],
+                                    "required": true
+                                }
+                            },
+                            {
+                                "name": "chainname",
+                                "label": "Chain name",
+                                "type": "Microsoft.Common.TextBox",
+                                "defaultValue": "myChain",
+                                "toolTip": "Enter the name of the chain you want to create / join.",
+                                "constraints": {
+                                    "required": true,
+                                    "regex": "^[a-zA-Z0-9]([a-zA-Z0-9-_]{0,30}[a-zA-Z0-9])?$",
+                                    "validationMessage": "Allowed characters: [a-zA-Z0-9_-], not starting/ending with _ -."
+                                }
+                            },
+                            {
+                                "name": "chaindescription",
+                                "label": "Chain description",
+                                "type": "Microsoft.Common.TextBox",
+                                "defaultValue": "",
+                                "toolTip": "Enter a textual description of the blockchain.",
+                                "visible": "[equals(steps('multichain').basic.mode, 'create')]",
+                                "constraints": {
+                                    "required": false,
+                                    "regex": "^[a-zA-Z0-9.,-_ ]{0,90}$",
+                                    "validationMessage": "Allowed characters: [a-zA-Z0-9.,-_ ]"
+                                }
+                            },
+                            {
+                                "name": "seednode",
+                                "label": "Seed node endpoint",
+                                "type": "Microsoft.Common.TextBox",
+                                "defaultValue": "",
+                                "toolTip": "Enter the endpoint of a seed node (e.g. 10.20.30.40:7000 or my-seed.node.com:8000).",
+                                "visible": "[equals(steps('multichain').basic.mode, 'join')]",
+                                "constraints": {
+                                    "required": true,
+                                    "regex": "^[a-zA-Z0-9-:.\\[\\]]+:[0-9]{1,5}$",
+                                    "validationMessage": "Please provide an ip-address or hostname and p2p port (e.g. 10.20.30.40:7000 or my-seed.node.com:8000)"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "config",
+                        "label": "MultiChain Configuration",
+                        "type": "Microsoft.Common.Section",
+                        "elements": [
+                            {
+                                "type": "Microsoft.Common.TextBlock",
+                                "name": "info_parameters",
+                                "visible": "[equals(steps('multichain').basic.mode, 'create')]",
+                                "options": {
+                                    "text": "The parameters of a blockchain are configured when creating a new blockchain. Once the blockchain is initialized, these parameters cannot be changed anymore.",
+                                    "link": {
+                                        "label": "Available Blockchain Parameters",
+                                        "uri": "https://www.multichain.com/developers/blockchain-parameters/"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "params",
+                                "label": "Blockchain Parameters",
+                                "type": "Microsoft.Common.TextBox",
+                                "defaultValue": "",
+                                "toolTip": "Example: mining-diversity=0.51; mining-requires-peers=true;",
+                                "visible": "[equals(steps('multichain').basic.mode, 'create')]",
+                                "constraints": {
+                                    "regex": "^((chain-protocol=(multichain|bitcoin)|root-stream-name=[a-zA-Z0-9_-]{1,256}|root-stream-open=([01]|(true|false))|chain-is-testnet=([01]|(true|false))|target-block-time=([2-9]|[1-9][0-9]{1,3}|[1-7][0-9]{4}|8[0-5][0-9]{3}|86[0-3][0-9]{2}|86400)|maximum-block-size=([5-9][0-9]{3}|[1-9][0-9]{4,8}|1000000000)|maximum-chunk-size=(25[6-9]|2[6-9][0-9]|[3-9][0-9]{2}|[1-9][0-9]{3,6}|1[0-5][0-9]{6}|16[0-6][0-9]{5}|167[0-6][0-9]{4}|1677[0-6][0-9]{3}|16777[0-1][0-9]{2}|1677720[0-9]|1677721[0-6])|maximum-chunk-count=(1[6-9]|[2-9][0-9]|[1-9][0-9]{2}|1[0-9]{3}|20[0-3][0-9]|204[0-8])|timing-upgrade-min-gap=([1-9][0-9]{0,6}|[1-2][0-9]{7}|30[0-9]{6}|31[0-4][0-9]{5}|315[0-2][0-9]{4}|3153[0-5][0-9]{3}|31536000)|default-network-port=(102[4-9]|10[3-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[012][0-9]|6553[0-5])|default-rpc-port=(102[4-9]|10[3-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[012][0-9]|6553[0-5])|anyone-can-connect=([01]|(true|false))|anyone-can-send=([01]|(true|false))|anyone-can-receive=([01]|(true|false))|anyone-can-receive-empty=([01]|(true|false))|anyone-can-create=([01]|(true|false))|anyone-can-issue=([01]|(true|false))|anyone-can-mine=([01]|(true|false))|anyone-can-activate=([01]|(true|false))|anyone-can-admin=([01]|(true|false))|support-miner-precheck=([01]|(true|false))|allow-arbitrary-outputs=([01]|(true|false))|allow-p2sh-outputs=([01]|(true|false))|allow-multisig-outputs=([01]|(true|false))|setup-first-blocks=([1-9][0-9]{0,6}|[1-2][0-9]{7}|30[0-9]{6}|31[0-4][0-9]{5}|315[0-2][0-9]{4}|3153[0-5][0-9]{3}|31536000)|mining-diversity=(0(\\.[0-9]+)?|1(\\.0+)?)|admin-consensus-upgrade=(0(\\.[0-9]+)?|1(\\.0+)?)|admin-consensus-txfilter=(0(\\.[0-9]+)?|1(\\.0+)?)|admin-consensus-admin=(0(\\.[0-9]+)?|1(\\.0+)?)|admin-consensus-activate=(0(\\.[0-9]+)?|1(\\.0+)?)|admin-consensus-mine=(0(\\.[0-9]+)?|1(\\.0+)?)|admin-consensus-create=(0(\\.[0-9]+)?|1(\\.0+)?)|admin-consensus-issue=(0(\\.[0-9]+)?|1(\\.0+)?)|lock-admin-mine-rounds=(0|[1-9][0-9]{0,3}|10000)|mining-requires-peers=([01]|(true|false))|mine-empty-rounds=(-1|0(\\.[0-9]+)?|[1-9][0-9]{0,2}(\\.[0-9]+)?|1000(\\.0+)?)|mining-turnover=(0(\\.[0-9]+)?|1(\\.0+)?)|first-block-reward=(-1|0|[1-9][0-9]{0,17}|1000000000000000000)|initial-block-reward=(0|[1-9][0-9]{0,17}|1000000000000000000)|reward-halving-interval=([6-9][0-9]|[1-9][0-9]{2,8}|1000000000)|reward-spendable-delay=([1-9][0-9]{0,4}|100000)|minimum-per-output=(-1|0|[1-9][0-9]{0,8}|1000000000)|maximum-per-output=(0|[1-9][0-9]{0,17}|1000000000000000000)|minimum-offchain-fee=(0|[1-9][0-9]{0,8}|1000000000)|minimum-relay-fee=(0|[1-9][0-9]{0,8}|1000000000)|native-currency-multiple=(0|[1-9][0-9]{0,8}|1000000000)|skip-pow-check=([01]|(true|false))|pow-minimum-bits=([1-9]|[12][0-9]|3[0-2])|target-adjust-freq=(-1|0|[1-9][0-9]{0,8}|[1-3][0-9]{9}|4[01][0-9]{8}|42[0-8][0-9]{7}|429[0-3][0-9]{6}|4294[0-8][0-9]{5}|42949[0-5][0-9]{4}|429496[0-6][0-9]{3}|4294967[01][0-9]{2}|42949672[0-8][0-9]|429496729[0-5])|allow-min-difficulty-blocks=([01]|(true|false))|only-accept-std-txs=([01]|(true|false))|max-std-tx-size=(102[4-9]|10[3-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3}|[1-9][0-9]{4,7}|100000000)|max-std-op-returns-count=(0|[1-9][0-9]{0,2}|10[0-1][0-9]|102[0-4])|max-std-op-return-size=(0|[1-9][0-9]{0,6}|[1-5][0-9]{7}|6[0-6][0-9]{6}|670[0-9]{5}|6710[0-7][0-9]{3}|67108[0-7][0-9]{2}|671088[0-5][0-9]|6710886[0-4])|max-std-op-drops-count=(0|[1-9][0-9]{0,1}|100)|max-std-element-size=(12[89]|1[3-9][0-9]|[2-9][0-9]{2}|[1-9][0-9]{3}|[1-7][0-9]{4}|80000)|max-std-op-drop-size=(0|[1-9][0-9]{0,3}|[1-2][0-9]{4}|3[01][0-9]{3}|32[0-6][0-9]{2}|327[0-5][0-9]|3276[0-8])|protocol-version=[12][0-9]{4}|network-message-start=[a-fA-F0-9]{8}|address-pubkeyhash-version=([a-fA-F0-9]{2}){1,4}|address-scripthash-version=([a-fA-F0-9]{2}){1,4}|private-key-version=([a-fA-F0-9]{2}){1,4}|address-checksum-value=[a-fA-F0-9]{8});\\s?)*$",
+                                    "required": false,
+                                    "validationMessage": "Format: parameter1=value1; parameter2=value2;  -  Please check for invalid / unsupported values."
+                                }
+                            },
+                            {
+                                "type": "Microsoft.Common.TextBlock",
+                                "name": "info_runtimeparameters",
+                                "options": {
+                                    "text": "MultiChain’s runtime parameters only affect individual nodes in a network.",
+                                    "link": {
+                                        "label": "Available Runtime Parameters",
+                                        "uri": "https://www.multichain.com/developers/runtime-parameters/"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "runtimeparams",
+                                "label": "Runtime Parameters",
+                                "type": "Microsoft.Common.TextBox",
+                                "defaultValue": "",
+                                "toolTip": "Example: autosubscribe=assets,streams; maxshowndata=16384; hideknownopdrops;",
+                                "constraints": {
+                                    "regex": "^((walletdbversion=[23]|checklevel=[0-4]|onlynet=(ipv4|ipv6|onion)|autosubscribe=(assets|streams|streams-items|streams-items-local|streams-keys|streams-keys-local|streams-publishers|streams-publishers-local|streams-retrieve)(,\\s?(assets|streams|streams-items|streams-items-local|streams-keys|streams-keys-local|streams-publishers|streams-publishers-local|streams-retrieve))*|debug(=[01]|=((addrman|alert|bench|coindb|db|lock|rand|rpc|selectcoins|mempool|net)(,(addrman|alert|bench|coindb|db|lock|rand|rpc|selectcoins|mempool|net))*))?|rpcallowmethod=[a-z]+(,\\s?[a-z]+)*|par=(-[1-9][0-9]?|0|[1-9][0-9]?)|genproclimit=(-1|[1-9][0-9]?)|mineemptyrounds=(-1|0(\\.[0-9]+)?|[1-9][0-9]{0,2}(\\.[0-9]+)?|1000(\\.0+)?)|limitfreerelay=[0-9]+|datacarriersize=[0-9]+|blockminsize=[0-9]+|blockmaxsize=[0-9]+|rpcthreads=[1-9][0-9]?|lockadminminerounds=[0-9]+|chunkquerytimeout=[0-9]+|chunkrequesttimeout=[0-9]+|acceptfiltertimeout=[0-9]+|sendfiltertimeout=[0-9]+|maxshowndata=[0-9]+|maxqueryscanitems=[0-9]+|autocombineminconf=[0-9]+|autocombinemininputs=[0-9]+|autocombinemaxinputs=[0-9]+|autocombinedelay=[0-9]+|autocombinesuspend=[0-9]+|maxconnections=[0-9]+|maxoutconnections=([1-9]|[12][0-9]|3[0-2])|maxreceivebuffer=[0-9]+|maxsendbuffer=[0-9]+|timeout=[1-9][0-9]*|keypool=[0-9]+|txconfirmtarget=[0-9]+|checkblocks=[0-9]+|dbcache=([4-9]|[1-9][0-9]{1,2}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-6])|maxorphantx=[0-9]+|banscore=[0-9]+|bantime=[0-9]+|retryinittime=[0-9]+|(no)?lockinlinemetadata(=[01])?|(no)?flushsourcechunks(=[01])?|(no)?txindex(=[01])?|(no)?dns(=[01])?|(no)?dnsseed(=[01])?|(no)?listen(=[01])?|(no)?forcednsseed(=[01])?|(no)?permitbaremultisig(=[01])?|(no)?v1apicompatible(=[01])?|(no)?onlyencrypted(=[01])?|(no)?disablewallet(=[01])?|(no)?sendfreetransactions(=[01])?|(no)?spendzeroconfchange(=[01])?|(no)?gen(=[01])?|(no)?logips(=[01])?|(no)?logtimestamps(=[01])?|(no)?datacarrier(=[01])?|(no)?offline(=[01])?|(no)?miningrequirespeers(=[01])?|(no)?hideknownopdrops(=[01])?|(no)?storeruntimeparams(=[01])?|minrelaytxfee=[0-9]+(\\.[0-9]+)|paytxfee=[0-9]+(\\.[0-9]+)|maxtxfee=[0-9]+(\\.[0-9]+)|miningturnover=(0(\\.[0-9]+)?|1(\\.0+)?)|addnode=[0-9a-fA-F.-:\\[\\]]+:[0-9]+|connect=[0-9a-fA-F.-:\\[\\]]+:[0-9]+|onion=[0-9a-fA-F.-:\\[\\]]+:[0-9]+|proxy=[0-9a-fA-F.-:\\[\\]]+:[0-9]+|whitelist=[0-9a-fA-F.\\/:\\[\\]]+|allowunencrypted=[0-9a-fA-F.\\/:\\[\\]]+|initprivkey=[a-zA-Z0-9]{50,58}|bantx=[a-fA-F0-9]{64}(,\\s?[a-fA-F0-9]{64})*|lockblock=[a-fA-F0-9]{64});\\s?)*$",
+                                    "required": false,
+                                    "validationMessage": "Format: parameter1=value1; parameter2=value2; parameter3;"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "name": "security",
+                        "label": "Secure Endpoint",
+                        "type": "Microsoft.Common.Section",
+                        "elements": [
+                            {
+                                "name": "certificate",
+                                "label": "TLS Certificate Type",
+                                "type": "Microsoft.Common.OptionsGroup",
+                                "defaultValue": "LetsEncrypt",
+                                "toolTip": "A self-signed certificate requires your application to import a custom certificate. When choosing letsencrypt you will get an officially signed certificate.",
+                                "constraints": {
+                                    "allowedValues": [
+                                        {
+                                            "label": "Disabled",
+                                            "value": "disabled"
+                                        },
+                                        {
+                                            "label": "Self-Signed",
+                                            "value": "self"
+                                        },
+                                        {
+                                            "label": "LetsEncrypt",
+                                            "value": "letsencrypt"
+                                        }
+                                    ],
+                                    "required": true
+                                }
+                            },
+                            {
+                                "name": "cert_warn",
+                                "type": "Microsoft.Common.InfoBox",
+                                "visible": "[equals(steps('multichain').security.certificate, 'disabled')]",
+                                "options": {
+                                    "icon": "Warning",
+                                    "text": "Disabling TLS is not recommended and should only be used for testing purposes."
+                                }
+                            },
+                            {
+                                "name": "email",
+                                "label": "Recovery E-Mail",
+                                "type": "Microsoft.Common.TextBox",
+                                "defaultValue": "",
+                                "toolTip": "It is recommended to provide a recovery email for letsencrypt. This email is used to recover a lost certificate.",
+                                "visible": "[equals(steps('multichain').security.certificate, 'letsencrypt')]",
+                                "constraints": {
+                                    "regex": "^.+@.+\\..+$",
+                                    "validationMessage": "Please enter a valid email address or leave empty (not recommended).",
+                                    "required": false
+                                }
+                            },
+                            {
+                                "name": "tos",
+                                "label": "Accept Terms of Service",
+                                "type": "Microsoft.Common.TextBox",
+                                "defaultValue": "",
+                                "toolTip": "You have to accept the Let's Encrypt Terms of Service by typing 'yes'",
+                                "visible": "[equals(steps('multichain').security.certificate, 'letsencrypt')]",
+                                "constraints": {
+                                    "regex": "^yes$",
+                                    "validationMessage": "Please type 'yes' to accept Let's Encrypt Terms of Service.",
+                                    "required": true
+                                }
+                            },
+                            {
+                                "name": "info_tos",
+                                "visible": "[equals(steps('multichain').security.certificate, 'letsencrypt')]",
+                                "type": "Microsoft.Common.TextBlock",
+                                "options": {
+                                    "link": {
+                                        "label": "Let's Encrypt ToS",
+                                        "uri": "https://letsencrypt.org/repository/"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
             }
-          ]
+        ],
+        "outputs": {
+            "location": "[location()]",
+            "uid": "[substring(guid(), 0, 8)]",
+            "vmsize": "[steps('resources').vm.size]",
+            "os_user": "[steps('resources').vm.os_user]",
+            "cred_password": "[steps('resources').vm.os_credential.password]",
+            "cred_sshPublicKey": "[steps('resources').vm.os_credential.sshPublicKey]",
+            "cred_authenticationType": "[steps('resources').vm.os_credential.authenticationType]",
+            "disksize": "[steps('resources').disk.disksize]",
+            "domainNameLabel": "[steps('resources').network.config.domainNameLabel]",
+            "mode": "[steps('multichain').basic.mode]",
+            "chain_name": "[steps('multichain').basic.chainname]",
+            "chain_description": "[steps('multichain').basic.chaindescription]",
+            "seed_node": "[steps('multichain').basic.seednode]",
+            "create_parameters": "[steps('multichain').config.params]",
+            "runtime_flags": "[steps('multichain').config.runtimeparams]",
+            "certtype": "[steps('multichain').security.certificate]",
+            "email": "[steps('multichain').security.email]"
         }
-      },
-      {
-        "name": "username",
-        "type": "Microsoft.Compute.UserNameTextBox",
-        "label": "VM user name",
-        "toolTip": "Root administrator name for the virtual machine",
-        "osPlatform": "Linux",
-        "constraints": {
-          "required": true,
-          "regex": "^[a-z][a-z0-9-]{1,15}$",
-          "validationMessage": "Name should be between 1 and 15 characters in length"
-        }
-      },
-      {
-        "name": "adminCredentials",
-        "type": "Microsoft.Compute.CredentialsCombo",
-        "label": {
-          "authenticationType": "Authentication type",
-          "password": "Password",
-          "confirmPassword": "Confirm password",
-          "sshPublicKey": "SSH public key"
-        },
-        "toolTip": {
-          "authenticationType": "",
-          "password": "VM password must be 12 characters and have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character.",
-          "sshPublicKey": ""
-        },
-        "constraints": {
-          "required": true
-        },
-        "options": {
-          "hideConfirmation": false
-        },
-        "osPlatform": "Linux"
-      }
-    ],
-    "steps": [
-      {
-        "name": "size",
-        "label": "Size",
-        "subLabel": {
-          "preValidation": "Choose virtual machine size",
-          "postValidation": "Done"
-        },
-        "bladeTitle": "Size",
-        "elements": [
-          {
-            "name": "vmSize",
-            "type": "Microsoft.Compute.SizeSelector",
-            "label": "Virtual machine size",
-            "toolTip": "",
-            "recommendedSizes": [
-              "Standard_D2s_v3",
-              "Standard_D4s_v3",
-              "Standard_E2s_v3"
-            ],
-            "constraints": {
-              "allowedSizes": [
-                "Standard_D2s_v3",
-                "Standard_D4s_v3",
-                "Standard_D8s_v3",
-                "Standard_D16s_v3",
-                "Standard_D32s_v3",
-                "Standard_E2s_v3",
-                "Standard_E4s_v3"
-              ]
-            },
-            "osPlatform": "Linux",
-            "count": 1
-          }
-        ]
-      }
-    ],
-    "outputs": {
-      "vmName": "[basics('name')]",
-      "authType": "[basics('adminCredentials').authenticationType]",
-      "adminUsername": "[basics('username')]",
-      "adminPassword": "[basics('adminCredentials').password]",
-      "adminSSHKey": "[basics('adminCredentials').sshPublicKey]",
-      "vmStoragePerformance": "[basics('vmstorageperf')]",
-      "vmSize": "[steps('size').vmSize]",
-      "location": "[location()]"
     }
-  }
 }
