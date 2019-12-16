@@ -1,322 +1,449 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "0.0.0.1",
   "parameters": {
-    "vmName": {
+    "_artifactsLocation": {
       "type": "string",
       "metadata": {
-        "description": "String used as the name for the virtual machine"
+        "description": "The base URI where artifacts required by this template are located."
       },
-      "maxLength": 15
+      "defaultValue": "[deployment().properties.templateLink.uri]"
     },
-    "authType": {
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "defaultValue": ""
+    },
+    "location": {
       "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Select the Azure region for the resources"
+      }
+    },
+    "uid": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Provide a unique id to generate unique names for the resources. Otherwise old resources may be overwritten."
+      },
+      "minLength": 0,
+      "maxLength": 16
+    },
+    "vmsize": {
+      "type": "string",
+      "defaultValue": "Standard_D2s_v3",
+      "metadata": {
+        "description": "Size of the vm that runs MultiChain."
+      }
+    },
+    "os_user": {
+      "type": "string",
+      "defaultValue": "mcadmin",
+      "metadata": {
+        "description": "Admin Username of the vm."
+      }
+    },
+    "cred_password": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Password for the vm admin user."
+      }
+    },
+    "cred_sshPublicKey": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "SSH-Key for the vm admin user."
+      }
+    },
+    "cred_authenticationType": {
+      "type": "string",
+      "defaultValue": "password",
       "allowedValues": [
         "password",
         "sshPublicKey"
       ],
       "metadata": {
-        "description": "Authorization type for SSH access to VMs"
+        "description": "Authentication to use for the vm admin user."
       }
     },
-    "adminUsername": {
+    "disksize": {
       "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Administrator username of each deployed VM (alphanumeric characters only)"
-      }
-    },
-    "adminPassword": {
-      "type": "securestring",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Administrator password for each deployed VM"
-      }
-    },
-    "adminSSHKey": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "SSH RSA public key file as a string"
-      }
-    },
-    "vmStoragePerformance": {
-      "type": "string",
-      "defaultValue": "Premium",
+      "defaultValue": "128",
       "allowedValues": [
-        "Standard",
-        "Premium"
+        "32",
+        "64",
+        "128",
+        "256",
+        "512",
+        "1024",
+        "2048",
+        "4096",
+        "8192",
+        "16384",
+        "32767"
       ],
       "metadata": {
-        "description": "Storage performance level for STRATO api virtual machines"
+        "description": "Size of the vm disk in GiB."
       }
     },
-    "vmSize": {
+    "domainNameLabel": {
       "type": "string",
-      "defaultValue": "Standard_D4s_v3",
       "metadata": {
-        "description": "Size of the virtual machine used for nodes"
+        "description": "Prefix label for the FQDN of the vm."
       }
     },
-    "location": {
+    "mode": {
+      "type": "string",
+      "defaultValue": "create",
+      "metadata": {
+        "description": "MultiChain deployment mode (create or join a network)."
+      },
+      "allowedValues": [
+        "create",
+        "join"
+      ]
+    },
+    "chain_name": {
       "type": "string",
       "metadata": {
-        "description": "Region of deployment for the template and assets"
+        "description": "Name of the chain to create or join."
       }
     },
-    "_artifactsLocation": {
+    "chain_description": {
       "type": "string",
+      "defaultValue": "",
       "metadata": {
-        "description": "The base URI where artifacts required by this template are located including a trailing '/'"
-      },
-      "defaultValue": "[deployment().properties.templateLink.uri]"
-      },
-    "_artifactsLocationSasToken": {
-      "type": "securestring",
+        "description": "Textual description of the blockchain."
+      }
+    },
+    "seed_node": {
+      "type": "string",
+      "defaultValue": "",
       "metadata": {
-        "description": "The sasToken required to access _artifactsLocation.  When the template is deployed using the accompanying scripts, a sasToken will be automatically generated. Use the defaultValue if the staging location is not secured."
+        "description": "Endpoint of the seed node to connect to. (<ip>:<port> or <hostname>:<port>)"
+      }
+    },
+    "create_parameters": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Provide custom parameters for creation of a new chain."
+      }
+    },
+    "runtime_flags": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Provide custom runtime flags for MultiChain daemon."
+      }
+    },
+    "certtype": {
+      "type": "string",
+      "defaultValue": "letsencrypt",
+      "metadata": {
+        "description": "Provide the type of the certificate."
       },
-      "defaultValue": ""
+      "allowedValues": [
+        "disabled",
+        "self",
+        "letsencrypt"
+      ]
+    },
+    "email": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Provide an email to be able to recover your letsencrypt certificate. Highly recommended when using letsencrypt!"
+      }
+    },
+    "post_script": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "!ADVANCED USERS ONLY! Provide a base64 encoded bash script that is executed after base deployment is finished."
+      }
     }
   },
   "variables": {
-    "apiVersionDeployments": "2017-05-10",
-    "apiVersionPublicIPAddresses": "2017-10-01",
-    "apiVersionNetworkSecurityGroups": "2017-10-01",
-    "apiVersionNetworkInterfaces": "2017-10-01",
-    "apiVersionVirtualNetworks": "2017-10-01",
-    "apiVersionStorageAccounts": "2018-02-01",
-    "nameInfix": "[toLower(substring(concat(parameters('vmName'), uniqueString(resourceGroup().id)), 0, 9))]",
-    "dnsName": "[variables('nameInfix')]",
-    "sshPort": 22,
-    "subnetName": "[concat(variables('nameInfix'), 'subnet')]",
-    "subnetPrefix": "10.1.0.0/24",
-    "nsgName": "[concat(variables('nameInfix'), '-nsg')]",
-    "nicName": "[concat(variables('nameInfix'), '-nic')]",
-    "publicIpAddressName": "[concat(variables('nameInfix'), '-pip')]",
-    "subnetPropertiesArray": [
-      {
-        "name": "[variables('subnetName')]",
-        "properties": {
-          "addressPrefix": "[variables('subnetPrefix')]"
+    "prefix": "[concat(parameters('chain_name'), '-', parameters('uid'), '-')]",
+    "publicIpAddressName": "[concat(variables('prefix'), 'ip')]",
+    "virtualNetworkName": "[concat(variables('prefix'), 'vnet')]",
+    "networkInterfaceName": "[concat(variables('prefix'), 'nic')]",
+    "networkSecurityGroupName": "[concat(variables('prefix'), 'nsg')]",
+    "virtualMachineName": "[concat(variables('prefix'), 'vm')]",
+    "vnetId": "[resourceId(resourceGroup().name,'Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+    "subnetId": "[concat(variables('vnetId'), '/subnets/default')]",
+    "nsgId": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]",
+    "nicId": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]",
+    "configuration": {
+      "os_user": "[parameters('os_user')]",
+      "chain_name": "[parameters('chain_name')]",
+      "chain_description": "[parameters('chain_description')]",
+      "seed_node": "[parameters('seed_node')]",
+      "runtime_flags": "[parameters('runtime_flags')]",
+      "create_parameters": "[parameters('create_parameters')]",
+      "email": "[parameters('email')]",
+      "mode": "[parameters('mode')]",
+      "certtype": "[parameters('certtype')]",
+      "post_script": "[parameters('post_script')]"
+    },
+    "linuxConfiguration": {
+      "disablePasswordAuthentication": true,
+      "ssh": {
+        "publicKeys": [
+          {
+            "path": "[concat('/home/', parameters('os_user'), '/.ssh/authorized_keys')]",
+            "keyData": "[parameters('cred_sshPublicKey')]"
+          }
+        ]
+      }
+    }
+  },
+  "functions": [
+  ],
+  "resources": [
+    {
+      "apiVersion": "2018-02-01",
+      "name": "pid-45e06598-9e1d-4630-8402-0cfdfcc93076",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+          ]
         }
       }
-    ],
-    "ubuntuImage": {
-      "publisher": "Canonical",
-      "offer": "UbuntuServer",
-      "sku": "16.04.0-LTS",
-      "version": "latest"
     },
-    "vNet": {
-      "name": "[concat(variables('nameInfix'), '-vnet')]",
-      "addressSpacePrefix": "10.1.0.0/20"
-    },
-    "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vNet').name, variables('subnetName'))]",
-    "adminPasswordOrSSHKey": "[if(equals(parameters('authType'), 'password'), parameters('adminPassword'), parameters('adminSSHKey'))]"
-  },
-  "resources": [
-	{
-		"apiVersion": "2018-02-01",
-		"name": "pid-ce9fefd9-abeb-5a7a-8c18-b77bbc0b37a0",
-		"type": "Microsoft.Resources/deployments",
-		"properties": {
-			"mode": "Incremental",
-			"template": {
-				"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-				"contentVersion": "1.0.0.0",
-				"resources": []
-			}
-		}
-	},
     {
-      "apiVersion": "[variables('apiVersionPublicIPAddresses')]",
       "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2019-04-01",
       "name": "[variables('publicIpAddressName')]",
       "location": "[parameters('location')]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "dnsSettings": {
-          "domainNameLabel": "[variables('dnsName')]"
-        }
-      }
-    },
-    {
-      "apiVersion": "[variables('apiVersionNetworkInterfaces')]",
-      "type": "Microsoft.Network/networkInterfaces",
-      "name": "[variables('nicName')]",
-      "location": "[parameters('location')]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', variables('vNet').name)]",
-        "[concat('Microsoft.Network/publicIpAddresses/', variables('publicIpAddressName'))]",
-        "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]"
-      ],
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
-            "properties": {
-              "privateIPAllocationMethod": "Dynamic",
-              "subnet": {
-                "id": "[variables('subnetRef')]"
-              },
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]"
-              }
-            }
-          }
-        ],
-        "networkSecurityGroup": {
-          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
-        }
-      }
-    },
-    {
-      "apiVersion": "[variables('apiVersionNetworkSecurityGroups')]",
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('nsgName')]",
-      "location": "[parameters('location')]",
-      "tags": {
-        "displayName": "Network Security Group"
+      "sku": {
+        "name": "Basic"
       },
+      "properties": {
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('domainNameLabel')]"
+        },
+        "publicIPAddressVersion": "IPv4",
+        "idleTimeoutInMinutes": 10,
+        "publicIPAllocationMethod": "Static"
+      }
+    },
+    {
+      "apiVersion": "2019-04-01",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('networkSecurityGroupName')]",
+      "location": "[parameters('location')]",
       "properties": {
         "securityRules": [
           {
-            "name": "allow-ssh",
+            "name": "SSH",
             "properties": {
-              "description": "Allow SSH",
-              "protocol": "*",
-              "sourcePortRange": "*",
-              "destinationPortRange": "[variables('sshPort')]",
+              "priority": 1000,
+              "access": "Deny",
+              "direction": "Inbound",
+              "protocol": "Tcp",
               "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
               "destinationAddressPrefix": "*",
-              "access": "Allow",
-              "priority": 100,
-              "direction": "Inbound"
+              "destinationPortRange": "22"
             }
           },
           {
-            "name": "allow-multichain-p2p",
+            "name": "P2P",
             "properties": {
-              "description": "Open the ports which a MultiChain network might choose for p2p. Later this can be restricted to the chain's default-network-port parameter.",
-              "protocol": "*",
-              "sourcePortRange": "*",
-              "destinationPortRange": "2600-9800",
-              "sourceAddressPrefix": "*",
-              "destinationAddressPrefix": "*",
+              "priority": 1001,
               "access": "Allow",
-              "priority": 104,
-              "direction": "Inbound"
+              "direction": "Inbound",
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "7000"
+            }
+          },
+          {
+            "name": "MultiChain",
+            "properties": {
+              "priority": 1002,
+              "description": "provides dashboard and rpc access",
+              "access": "Allow",
+              "direction": "Inbound",
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[if(equals(parameters('certtype'), 'disabled'), '80', '443')]"
+            }
+          },
+          {
+            "name": "LetsEncrypt",
+            "properties": {
+              "priority": 1003,
+              "description": "required by letsencrypt certbot",
+              "access": "[if(equals(parameters('certtype'),'letsencrypt'), 'Allow', 'Deny')]",
+              "direction": "Inbound",
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "80"
             }
           }
         ]
       }
     },
     {
-      "apiVersion": "[variables('apiVersionVirtualNetworks')]",
+      "apiVersion": "2019-04-01",
       "type": "Microsoft.Network/virtualNetworks",
-      "name": "[variables('vNet').name]",
+      "name": "[variables('virtualNetworkName')]",
       "location": "[parameters('location')]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
-            "[variables('vNet').addressSpacePrefix]"
+            "172.17.0.0/16"
           ]
         },
-        "subnets": "[variables('subnetPropertiesArray')]"
+        "subnets": [
+          {
+            "name": "default",
+            "properties": {
+              "addressPrefix": "172.17.0.0/24"
+            }
+          }
+        ]
       }
     },
     {
-      "apiVersion": "[variables('apiVersionDeployments')]",
-      "name": "vmLinkedTemplate",
-      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-04-01",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('networkInterfaceName')]",
+      "location": "[parameters('location')]",
       "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', variables('vNet').name)]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+        "[concat('Microsoft.Network/publicIpAddresses/', variables('publicIpAddressName'))]",
+        "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]",
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
       ],
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[uri(parameters('_artifactsLocation'), concat('nested/VM.json', parameters('_artifactsLocationSasToken')))]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "authType": {
-            "value": "[parameters('authType')]"
-          },
-          "storagePerformance": {
-            "value": "[parameters('vmStoragePerformance')]"
-          },
-          "nicName": {
-            "value": "[variables('nicName')]"
-          },
-          "vmSize": {
-            "value": "[parameters('vmSize')]"
-          },
-          "adminUsername": {
-            "value": "[parameters('adminUsername')]"
-          },
-          "adminPasswordOrKey": {
-            "value": "[variables('adminPasswordOrSSHKey')]"
-          },
-          "ubuntuImage": {
-            "value": "[variables('ubuntuImage')]"
-          },
-          "dnsName": {
-            "value": "[variables('dnsName')]"
-          },
-          "nameInfix": {
-            "value": "[variables('nameInfix')]"
-          },
-          "location": {
-            "value": "[parameters('location')]"
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAddressVersion": "IPv4",
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetId')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId(resourceGroup().name, 'Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
+              }
+            }
           }
+        ],
+        "networkSecurityGroup": {
+          "id": "[variables('nsgId')]"
         }
       }
     },
     {
-      "apiVersion": "[variables('apiVersionDeployments')]",
-      "name": "vmExtensionLinkedTemplate",
-      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-03-01",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('virtualMachineName')]",
+      "location": "[parameters('location')]",
       "dependsOn": [
-        "vmLinkedTemplate"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('networkInterfaceName'))]"
       ],
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[uri(parameters('_artifactsLocation'), concat('nested/VMExtension.json', parameters('_artifactsLocationSasToken')))]",
-          "contentVersion": "1.0.0.0"
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmsize')]"
         },
-        "parameters": {
-          "authType": {
-            "value": "[parameters('authType')]"
+        "storageProfile": {
+          "osDisk": {
+            "caching": "ReadOnly",
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "Premium_LRS"
+            },
+            "diskSizeGB": "[parameters('disksize')]"
           },
-          "adminUsername": {
-            "value": "[parameters('adminUsername')]"
-          },
-          "artifactsLocationURL": {
-            "value": "[parameters('_artifactsLocation')]"
-          },
-          "artifactsLocationUrlSasToken": {
-            "value": "[parameters('_artifactsLocationSasToken')]"
-          },
-          "location": {
-            "value": "[parameters('location')]"
-          },
-          "dnsName": {
-            "value": "[variables('dnsName')]"
-          },
-          "fqdn": {
-            "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('publicIpAddressName')), variables('apiVersionPublicIPAddresses')).dnsSettings.fqdn]"
+          "imageReference": {
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "18.04-LTS",
+            "version": "latest"
           }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[variables('nicId')]"
+            }
+          ]
+        },
+        "osProfile": {
+          "computerName": "[parameters('domainNameLabel')]",
+          "adminUsername": "[parameters('os_user')]",
+          "adminPassword": "[parameters('cred_password')]",
+          "linuxConfiguration": "[if(equals(parameters('cred_authenticationType'), 'password'), json('null'), variables('linuxConfiguration'))]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('virtualMachineName'),'/installMultiChain')]",
+      "apiVersion": "2019-03-01",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('virtualMachineName'))]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": [
+            "[uri(parameters('_artifactsLocation'),concat('scripts/init.sh', parameters('_artifactsLocationSasToken')))]"
+          ],
+          "commandToExecute": "[concat('./init.sh', ' ', base64(string(variables('configuration'))), ' ',reference(variables('publicIpAddressName')).ipAddress, ' ',reference(variables('publicIpAddressName')).dnsSettings.fqdn)]"
         }
       }
     }
   ],
   "outputs": {
-    "dnsName": {
+    "basic-auth-user": {
       "type": "string",
-      "value": "[reference(variables('publicIpAddressName')).dnsSettings.fqdn]"
-    } 
+      "value": "[split(reference('/installMultiChain').instanceView.statuses[0].message, '#authuser#')[1]]"
+    },
+    "basic-auth-password": {
+      "type": "string",
+      "value": "[split(reference('/installMultiChain').instanceView.statuses[0].message, '#authpassword#')[1]]"
+    },
+    "dashboard": {
+      "type": "string",
+      "value": "[split(reference('/installMultiChain').instanceView.statuses[0].message, '#dashboard#')[1]]"
+    },
+    "rpc-endpoint": {
+      "type": "string",
+      "value": "[split(reference('/installMultiChain').instanceView.statuses[0].message, '#rpcaddr#')[1]]"
+    },
+    "p2p-endpoint": {
+      "type": "string",
+      "value": "[split(reference('/installMultiChain').instanceView.statuses[0].message, '#p2paddr#')[1]]"
+    },
+    "certificate": {
+      "type": "string",
+      "value": "[split(reference('/installMultiChain').instanceView.statuses[0].message, '#certificate#')[1]]"
+    },
+    "initial-multichain-address": {
+      "type": "string",
+      "value": "[split(reference('/installMultiChain').instanceView.statuses[0].message, '#initial_multichain_address#')[1]]"
+    }
   }
 }
