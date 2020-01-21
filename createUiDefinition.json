@@ -24,7 +24,7 @@
                                 "name": "info_vm_size",
                                 "type": "Microsoft.Common.TextBlock",
                                 "options": {
-                                    "text": "MultiChain requires a CPU with a high clock speed, which provides fast single-threaded performance. MultiChain can make optimal use of around 4 threads at most. If you require high transaction throughput, also consider an instance with a high IOPS value.",
+                                    "text": "It is recommended to run MultiChain on a CPU with a high clock speed, which provides fast single-threaded performance. MultiChain can make optimal use of around 4 threads at most. If you require high transaction throughput, also consider an instance with a high IOPS value.",
                                     "link": {
                                         "label": "Additional information",
                                         "uri": "https://docs.microsoft.com/en-us/azure/virtual-machines/linux/sizes"
@@ -71,7 +71,16 @@
                                     "confirmPassword": "Confirm password",
                                     "sshPublicKey": "SSH public key"
                                 }
-                            }
+                            },
+                            {
+								"name": "os_login_info",
+								"type": "Microsoft.Common.InfoBox",
+								"visible": true,
+								"options": {
+									"icon": "Info",
+									"text": "Note that the initial network security group configuration of the resource group will block port 22, preventing login via SSH. This can be changed via tha Azure portal interface."
+								}
+							}
                         ]
                     },
                     {
@@ -267,9 +276,9 @@
                                 "name": "info_parameters",
                                 "visible": "[equals(steps('multichain').basic.mode, 'create')]",
                                 "options": {
-                                    "text": "The parameters of a blockchain are configured when creating a new blockchain. Once the blockchain is initialized, these parameters cannot be changed anymore.",
+                                    "text": "The parameters of a blockchain are configured when creating that chain. Once the blockchain is initialized, these parameters cannot be changed (except those marked as Upgradable in the documentation linked below).",
                                     "link": {
-                                        "label": "Available Blockchain Parameters",
+                                        "label": "MultiChain Blockchain Parameters",
                                         "uri": "https://www.multichain.com/developers/blockchain-parameters/"
                                     }
                                 }
@@ -291,9 +300,9 @@
                                 "type": "Microsoft.Common.TextBlock",
                                 "name": "info_runtimeparameters",
                                 "options": {
-                                    "text": "MultiChain’s runtime parameters only affect individual nodes in a network.",
+                                    "text": "The runtime parameters will only affect this node in the network, and can be changed in future through the multichain.conf file (requires logging in to server).",
                                     "link": {
-                                        "label": "Available Runtime Parameters",
+                                        "label": "MultiChain Runtime Parameters",
                                         "uri": "https://www.multichain.com/developers/runtime-parameters/"
                                     }
                                 }
@@ -309,7 +318,16 @@
                                     "required": false,
                                     "validationMessage": "Format: parameter1=value1; parameter2=value2; parameter3;"
                                 }
-                            }
+                            },
+                            {
+								"name": "os_login_info",
+								"type": "Microsoft.Common.InfoBox",
+								"visible": true,
+								"options": {
+									"icon": "Info",
+									"text": "Note that some parameters (such as setting the RPC port or data directory) cannot be set, because their values are hard coded in this template. If you try to set these parameters, a validation error will appear above."
+								}
+							}
                         ]
                     },
                     {

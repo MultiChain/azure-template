@@ -196,10 +196,10 @@ distinguished_name = req_distinguished_name
 x509_extensions = v3_req
 prompt = no
 [req_distinguished_name]
-C = UK
-L = London
-O = CoinSciences
-OU = MultiChain
+C = US
+L = Unknown
+O = Unknown
+OU = Unknown
 CN = ${FQDN}
 [v3_req]
 keyUsage = keyCertSign,keyEncipherment,dataEncipherment
