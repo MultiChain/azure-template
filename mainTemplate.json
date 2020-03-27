@@ -409,7 +409,9 @@
         "autoUpgradeMinorVersion": true,
         "settings": {
           "fileUris": [
-            "[uri(parameters('_artifactsLocation'),concat('scripts/init.sh', parameters('_artifactsLocationSasToken')))]"
+            "[uri(parameters('_artifactsLocation'),concat('scripts/init.sh', parameters('_artifactsLocationSasToken')))]",
+            "[uri(parameters('_artifactsLocation'),concat('scripts/dashboard.php', parameters('_artifactsLocationSasToken')))]",
+            "[uri(parameters('_artifactsLocation'),concat('scripts/multichain-2.0-latest.tar.gz', parameters('_artifactsLocationSasToken')))]"
           ],
           "commandToExecute": "[concat('./init.sh', ' ', base64(string(variables('configuration'))), ' ',reference(variables('publicIpAddressName')).ipAddress, ' ',reference(variables('publicIpAddressName')).dnsSettings.fqdn)]"
         }

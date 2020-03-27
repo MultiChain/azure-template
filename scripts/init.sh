@@ -93,12 +93,15 @@ MC_CHAIN_CONFIG=${MC_CHAIN_FOLDER}/multichain.conf
 MC_PID_LOCATION=${MC_OS_USER_HOME}/multichain.pid
 MC_LOCAL_RPC=http://127.0.0.1:${MC_RPC_PORT}
 MC_P2P_ENDPOINT=${CHAIN_NAME}@${IP}:${MC_P2P_PORT}
-MC_DOWNLOAD_URL=https://www.multichain.com/download/multichain-2.0-latest.tar.gz
-MC_VERSION_URL=https://www.multichain.com/download/multichain-2.0-latest.json
-MC_DASHBOARD_PHP_URL=https://www.multichain.com/download/multichain-2.0-azure-dashboard-php.txt
+MC_DASHBOARD_PHP_SRC=/var/lib/waagent/custom-script/download/0/dashboard.php
+MC_INITIAL_INSTALL_SRC=/var/lib/waagent/custom-script/download/0/multichain-2.0-latest.tar.gz
 MC_START_SCRIPT=${MC_OS_USER_HOME}/start.sh
 MC_DIAGNOSTIC_SCRIPT=${MC_OS_USER_HOME}/diagnostics.sh
 MC_LOG_SCRIPT=${MC_OS_USER_HOME}/getdebuglog.sh
+MC_CONFIG_VERSION_URL=${MC_OS_USER_HOME}/multichain-config-version-url
+MC_CONFIG_DOWNLOAD_URL=${MC_OS_USER_HOME}/multichain-config-download-url
+MC_CONFIG_CHECK_SCRIPT=/root/multichain-config-check.sh
+MC_CONFIG_WRITE_SCRIPT=/root/multichain-config-write.sh
 MC_CHECK_SCRIPT=/root/multichain-check-latest.sh
 MC_DOWNLOAD_SCRIPT=/root/multichain-download-latest.sh
 MC_INSTALL_SCRIPT=/root/multichain-install.sh
@@ -118,20 +121,42 @@ NGINX_CONFIG_FILE=/etc/nginx/nginx.conf
 NGINX_SERVICE_FILE=/lib/systemd/system/nginx.service
 NGINX_RELOAD_SCRIPT=/etc/letsencrypt/renewal-hooks/deploy/reload_nginx.sh
 
+# create script to report whether config files exist and are non-zero in size
+cat <<EOF >${MC_CONFIG_CHECK_SCRIPT}
+#!/bin/bash
+if [[ -s ${MC_CONFIG_VERSION_URL} && -s ${MC_CONFIG_DOWNLOAD_URL} ]]; then
+	printf "1"
+else
+	printf "0"
+fi
+EOF
+
+# create script to write config files (one time only)
+cat <<EOF >${MC_CONFIG_WRITE_SCRIPT}
+#!/bin/bash
+if [ \`${MC_CONFIG_CHECK_SCRIPT}\` != "0" ]; then
+	printf "0"
+	exit 1;
+fi
+echo -n \$1 >${MC_CONFIG_VERSION_URL}
+echo -n \$2 >${MC_CONFIG_DOWNLOAD_URL}
+chown www-data:www-data ${MC_CONFIG_VERSION_URL} ${MC_CONFIG_DOWNLOAD_URL}cho
+printf "1"
+EOF
 
 # create script to check latest version
 cat <<EOF >${MC_CHECK_SCRIPT}
-wget -q -O - ${MC_VERSION_URL}
+wget -q -O - \`cat ${MC_CONFIG_VERSION_URL}\`
 EOF
 
 # create script to download latest multichain 2.0
 cat <<EOF >${MC_DOWNLOAD_SCRIPT}
 cd /tmp
 rm -rf multichain*
-curl -sL --retry 10 --connect-timeout 10 --retry-delay 10 --retry-max-time 600 -o multichain.tar.gz ${MC_DOWNLOAD_URL}
+curl -sL --retry 10 --connect-timeout 10 --retry-delay 10 --retry-max-time 600 -o multichain.tar.gz \`cat ${MC_CONFIG_DOWNLOAD_URL}\`
 tar -xvzf multichain.tar.gz
 mv multichain-* multichain-install
-curl -sL --retry 10 --connect-timeout 10 --retry-delay 10 --retry-max-time 600 -o multichain-install/version.json ${MC_VERSION_URL}
+curl -sL --retry 10 --connect-timeout 10 --retry-delay 10 --retry-max-time 600 -o multichain-install/version.json \`cat ${MC_CONFIG_VERSION_URL}\`
 EOF
 
 # create script to install downloaded multichain
@@ -142,11 +167,19 @@ cd ..
 rm -rf multichain*
 EOF
 
-# run the script to download and install latest multichain 2.0
-chmod 700 ${MC_DOWNLOAD_SCRIPT} ${MC_INSTALL_SCRIPT} ${MC_CHECK_SCRIPT}
-${MC_DOWNLOAD_SCRIPT}
-${MC_INSTALL_SCRIPT}
+# set execution permissions on installing scripts
+chmod 700 ${MC_CONFIG_CHECK_SCRIPT}
+chmod 700 ${MC_CONFIG_WRITE_SCRIPT}
+chmod 700 ${MC_CHECK_SCRIPT}
+chmod 700 ${MC_DOWNLOAD_SCRIPT}
+chmod 700 ${MC_INSTALL_SCRIPT}
 
+# initial installation of multichain
+cd /tmp
+cp ${MC_INITIAL_INSTALL_SRC} multichain.tar.gz
+tar -xvzf multichain.tar.gz
+mv multichain-* multichain-install
+${MC_INSTALL_SCRIPT}
 
 # retrieve certificate using letsencrypt certbot
 if [[ "${CERTTYPE}" == "letsencrypt" ]]
@@ -418,6 +451,8 @@ EOF
 # allow nginx user to run specific scripts as root user
 cat <<EOF >/etc/sudoers.d/www-data-root
 www-data ALL=(root) NOPASSWD:$MC_SERVICE_SCRIPT
+www-data ALL=(root) NOPASSWD:$MC_CONFIG_CHECK_SCRIPT
+www-data ALL=(root) NOPASSWD:$MC_CONFIG_WRITE_SCRIPT
 www-data ALL=(root) NOPASSWD:$MC_CHECK_SCRIPT
 www-data ALL=(root) NOPASSWD:$MC_DOWNLOAD_SCRIPT
 www-data ALL=(root) NOPASSWD:$MC_INSTALL_SCRIPT
@@ -425,7 +460,8 @@ EOF
 
 # install monitoring page
 rm -rf /var/www/html/* || true
-curl -s -L --retry 10 --connect-timeout 10 --retry-delay 10 --retry-max-time 600 -o /var/www/html/index.php ${MC_DASHBOARD_PHP_URL}
+cp ${MC_DASHBOARD_PHP_SRC} /var/www/html/index.php
+chmod a+rx /var/www/html/index.php
 
 # make sure all files are owned by the correct user
 chown -R ${MC_OS_USER}:${MC_OS_GROUP} ${MC_OS_USER_HOME}/*
