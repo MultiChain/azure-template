@@ -140,7 +140,7 @@ if [ \`${MC_CONFIG_CHECK_SCRIPT}\` != "0" ]; then
 fi
 echo -n \$1 >${MC_CONFIG_VERSION_URL}
 echo -n \$2 >${MC_CONFIG_DOWNLOAD_URL}
-chown www-data:www-data ${MC_CONFIG_VERSION_URL} ${MC_CONFIG_DOWNLOAD_URL}cho
+chown www-data:www-data ${MC_CONFIG_VERSION_URL} ${MC_CONFIG_DOWNLOAD_URL}
 printf "1"
 EOF
 
