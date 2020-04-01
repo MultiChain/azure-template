@@ -212,11 +212,11 @@
     
     <p style="text-align:right;">
       Version check URL:
-      <input name="version-url" size="80">
+      <input name="version-url" size="80" value="<?php echo base64_decode('aHR0cHM6Ly93d3cubXVsdGljaGFpbi5jb20vZG93bmxvYWQvbXVsdGljaGFpbi0yLjAtbGF0ZXN0Lmpzb24=');?>">
     </p>
     <p style="text-align:right;">
       Update download URL:
-      <input name="download-url" size="80">
+      <input name="download-url" size="80" value="<?php echo base64_decode('aHR0cHM6Ly93d3cubXVsdGljaGFpbi5jb20vZG93bmxvYWQvbXVsdGljaGFpbi0yLjAtbGF0ZXN0LnRhci5neg==');?>">
     </p>
     
     <input type="submit" name="setconfig" value="Complete installation">
