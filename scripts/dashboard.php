@@ -208,7 +208,7 @@
   
 <form method="post">
   <div style="background-color:#fcc; padding:1em; width:auto; display:inline-block;">
-    To complete installation, please enter the URLs for MultiChain version checking and downloading:
+    To complete installation, please confirm the URLs for MultiChain version checking and downloading:
     
     <p style="text-align:right;">
       Version check URL:
