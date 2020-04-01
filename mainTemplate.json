@@ -251,7 +251,7 @@
               "protocol": "Tcp",
               "sourceAddressPrefix": "*",
               "sourcePortRange": "*",
-              "destinationAddressPrefix": "*",
+              "destinationAddressPrefix": "172.17.0.4",
               "destinationPortRange": "22"
             }
           },
@@ -264,7 +264,7 @@
               "protocol": "Tcp",
               "sourceAddressPrefix": "*",
               "sourcePortRange": "*",
-              "destinationAddressPrefix": "*",
+              "destinationAddressPrefix": "172.17.0.4",
               "destinationPortRange": "7000"
             }
           },
@@ -278,7 +278,7 @@
               "protocol": "Tcp",
               "sourceAddressPrefix": "*",
               "sourcePortRange": "*",
-              "destinationAddressPrefix": "*",
+              "destinationAddressPrefix": "172.17.0.4",
               "destinationPortRange": "[if(equals(parameters('certtype'), 'disabled'), '80', '443')]"
             }
           },
@@ -292,7 +292,7 @@
               "protocol": "Tcp",
               "sourceAddressPrefix": "*",
               "sourcePortRange": "*",
-              "destinationAddressPrefix": "*",
+              "destinationAddressPrefix": "172.17.0.4",
               "destinationPortRange": "80"
             }
           }
@@ -304,6 +304,9 @@
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
       "location": "[parameters('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
+      ],
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
@@ -314,7 +317,10 @@
           {
             "name": "default",
             "properties": {
-              "addressPrefix": "172.17.0.0/24"
+              "addressPrefix": "172.17.0.0/24",
+              "networkSecurityGroup": {
+                "id": "[variables('nsgId')]"
+              }
             }
           }
         ]
@@ -327,7 +333,6 @@
       "location": "[parameters('location')]",
       "dependsOn": [
         "[concat('Microsoft.Network/publicIpAddresses/', variables('publicIpAddressName'))]",
-        "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]",
         "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
       ],
       "properties": {
@@ -336,7 +341,8 @@
             "name": "ipconfig",
             "properties": {
               "privateIPAddressVersion": "IPv4",
-              "privateIPAllocationMethod": "Dynamic",
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "172.17.0.4",
               "subnet": {
                 "id": "[variables('subnetId')]"
               },
@@ -345,10 +351,7 @@
               }
             }
           }
-        ],
-        "networkSecurityGroup": {
-          "id": "[variables('nsgId')]"
-        }
+        ]
       }
     },
     {
