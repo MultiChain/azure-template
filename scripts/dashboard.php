@@ -14,16 +14,16 @@
     $downloadurl=trim($_POST['download-url']);
     
     if (
-    	(md5($versionurl)=='274cf85ab1ef340514ab0d75fc80ba07') &&
-    	(md5($downloadurl)=='216bada8fad1018cbebc930d943f6d24')
+      (md5($versionurl)=='274cf85ab1ef340514ab0d75fc80ba07') &&
+      (md5($downloadurl)=='216bada8fad1018cbebc930d943f6d24')
     ) {
-    	if (shell_exec('sudo -u root /root/multichain-config-write.sh '.escapeshellarg($versionurl).' '.escapeshellarg($downloadurl)))
-	    	$setconfightml='<p style="color:green; font-size:200%">URLs successfully installed</p>';
-    	else
-	    	$setconfightml='<p style="color:red; font-size:200%">URLs could not be installed, please contact support</p>';
+      if (shell_exec('sudo -u root /root/multichain-config-write.sh '.escapeshellarg($versionurl).' '.escapeshellarg($downloadurl)))
+        $setconfightml='<p style="color:green; font-size:200%">URLs successfully installed</p>';
+      else
+        $setconfightml='<p style="color:red; font-size:200%">URLs could not be installed, please contact support</p>';
 
     } else
-    	$setconfightml='<p style="color:red; font-size:200%">Please check the URLs and try again</p>';
+      $setconfightml='<p style="color:red; font-size:200%">Please check the URLs and try again</p>';
   }
   
   $canupdate=shell_exec('sudo -u root /root/multichain-config-check.sh');
@@ -235,10 +235,14 @@
     echo '<input type="submit" name="stop_confirm" value="Click again to confirm stopping MultiChain node"/ style="height:2em; background-color:#f00; color:#fff;">';
 
   } else {
-    if (isset($latest['community-version']))
+    if (isset($latest['community-version']) && !(
+      isset($latest['community-nodeversion']) && isset($getinitstatus['nodeversion']) && 
+      ($getinitstatus['nodeversion']>=$latest['community-nodeversion'])
+    )) {
       echo '<input type="submit" name="download" value="Download '.htmlspecialchars($latest['community-version']).
         ' Community"/ style="height:2em; background-color:#99f;"> ';
-
+    }
+    
     if (!$responses) { // only allow these options if node is not running
       if (isset($downloaded['community-version']))
         echo '<input type="submit" name="install" value="Install downloaded '.htmlspecialchars($downloaded['community-version']).
