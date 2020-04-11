@@ -173,10 +173,10 @@
     "networkInterfaceName": "[concat(variables('prefix'), 'nic')]",
     "networkSecurityGroupName": "[concat(variables('prefix'), 'nsg')]",
     "virtualMachineName": "[concat(variables('prefix'), 'vm')]",
-    "vnetId": "[resourceId(resourceGroup().name,'Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
-    "subnetId": "[concat(variables('vnetId'), '/subnets/default')]",
-    "nsgId": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]",
-    "nicId": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]",
+    "subnetName": "default",
+    "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
+    "nsgId": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]",
+    "nicId": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]",
     "configuration": {
       "os_user": "[parameters('os_user')]",
       "chain_name": "[parameters('chain_name')]",
@@ -205,7 +205,7 @@
   ],
   "resources": [
     {
-      "apiVersion": "2018-02-01",
+      "apiVersion": "2019-05-01",
       "name": "pid-ce9fefd9-abeb-5a7a-8c18-b77bbc0b37a0",
       "type": "Microsoft.Resources/deployments",
       "properties": {
@@ -315,7 +315,7 @@
         },
         "subnets": [
           {
-            "name": "default",
+            "name": "[variables('subnetName')]",
             "properties": {
               "addressPrefix": "172.17.0.0/24",
               "networkSecurityGroup": {
@@ -347,7 +347,7 @@
                 "id": "[variables('subnetId')]"
               },
               "publicIPAddress": {
-                "id": "[resourceId(resourceGroup().name, 'Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
+                "id": "[resourceId('Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
               }
             }
           }
