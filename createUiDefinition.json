@@ -1,6 +1,6 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
-    "handler": "Microsoft.Compute.MultiVm",
+    "handler": "Microsoft.Azure.CreateUIDef",
     "version": "0.1.2-preview",
     "parameters": {
         "basics": [],
@@ -35,7 +35,7 @@
                                 "label": "Size",
                                 "name": "size",
                                 "type": "Microsoft.Compute.SizeSelector",
-                                "toolTip": "Choose a suitable VM size.",
+                                "toolTip": "Choose a suitable virtual machine size.",
                                 "osPlatform": "Linux",
                                 "count": 1,
                                 "recommendedSizes": [
@@ -52,7 +52,7 @@
                                 "name": "os_user",
                                 "type": "Microsoft.Compute.UserNameTextBox",
                                 "label": "Admin Username",
-                                "toolTip": "Enter the Username of the operating system admin user.",
+                                "toolTip": "Enter the username of the operating system admin user.",
                                 "constraints": {
                                   "required": true,
                                   "regex": "^\\b(?!(multichain|operator|daemon|sudo|www-data)\\b)[a-z0-9]+$",
@@ -67,8 +67,8 @@
                                 "osPlatform": "Linux",
                                 "toolTip": {
                                     "authenticationType": "Choose an authentication type.",
-                                    "password": "Provide a secure password for the admin operating system user.",
-                                    "sshPublicKey": "Provide a ssh public key for the admon operating system user"                                
+                                    "password": "Provide a secure password for the operating system admin user.",
+                                    "sshPublicKey": "Provide a ssh public key for the operating system admin user"                                
                                 },
                                 "label": {
                                     "authenticationType": "Authentication type",
@@ -237,7 +237,7 @@
                                 "label": "Chain name",
                                 "type": "Microsoft.Common.TextBox",
                                 "defaultValue": "myChain",
-                                "toolTip": "Enter the name of the chain you want to create / join.",
+                                "toolTip": "Enter the name of the blockchain to create or join.",
                                 "constraints": {
                                     "required": true,
                                     "regex": "^[a-zA-Z0-9]([a-zA-Z0-9-_]{0,30}[a-zA-Z0-9])?$",
@@ -249,7 +249,7 @@
                                 "label": "Chain description",
                                 "type": "Microsoft.Common.TextBox",
                                 "defaultValue": "",
-                                "toolTip": "Enter a textual description of the blockchain.",
+                                "toolTip": "Enter a textual description of the new blockchain.",
                                 "visible": "[equals(steps('multichain').basic.mode, 'create')]",
                                 "constraints": {
                                     "required": false,
@@ -392,7 +392,7 @@
                                 "label": "Accept Terms of Service",
                                 "type": "Microsoft.Common.TextBox",
                                 "defaultValue": "",
-                                "toolTip": "You have to accept the Let's Encrypt Terms of Service by typing 'yes'",
+                                "toolTip": "You must accept the Let's Encrypt Terms of Service by typing 'yes'",
                                 "visible": "[equals(steps('multichain').security.certificate, 'letsencrypt')]",
                                 "constraints": {
                                     "regex": "^yes$",
