@@ -105,6 +105,20 @@
         "join"
       ]
     },
+    "rpcuser": {
+      "type": "string",
+      "defaultValue": "multichain",
+      "metadata": {
+        "description": "BasicAuth username for the MultiChain RPC endpoint and the dashboard."
+      }
+    },
+    "rpcpassword": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "BasicAuth password for the MultiChain RPC endpoint and the dashboard."
+      }
+    },
     "chain_name": {
       "type": "string",
       "metadata": {
@@ -186,6 +200,8 @@
       "create_parameters": "[parameters('create_parameters')]",
       "email": "[parameters('email')]",
       "mode": "[parameters('mode')]",
+      "rpcuser": "[parameters('rpcuser')]",
+      "rpcpassword": "[parameters('rpcpassword')]",
       "certtype": "[parameters('certtype')]",
       "post_script": "[parameters('post_script')]"
     },
@@ -422,14 +438,6 @@
     }
   ],
   "outputs": {
-    "basic-auth-user": {
-      "type": "string",
-      "value": "[split(reference('/installMultiChain').instanceView.statuses[0].message, '#authuser#')[1]]"
-    },
-    "basic-auth-password": {
-      "type": "string",
-      "value": "[split(reference('/installMultiChain').instanceView.statuses[0].message, '#authpassword#')[1]]"
-    },
     "dashboard": {
       "type": "string",
       "value": "[split(reference('/installMultiChain').instanceView.statuses[0].message, '#dashboard#')[1]]"

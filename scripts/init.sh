@@ -56,10 +56,14 @@ RUNTIME_FLAGS_INPUT=$(jq -r ."runtime_flags // empty" "${CONFIG_FILE}")
 MODE=$(jq -r ."mode // empty" "${CONFIG_FILE}")
 CERTTYPE=$(jq -r ."certtype // empty" "${CONFIG_FILE}")
 POST_SCRIPT=$(jq -r ."post_script // empty" "${CONFIG_FILE}")
+BASIC_AUTH_USER=$(jq -r ."rpcuser // empty" "${CONFIG_FILE}")
+BASIC_AUTH_PASSWORD=$(jq -r ."rpcpassword // empty" "${CONFIG_FILE}")
 
 # check all mandatory parameters are set
 [[ -z "${ADMIN_USER}" ]] && fail "no os_user was provided"
 [[ "${ADMIN_USER}" == "multichain" ]] && fail "os_user may not be: multichain"
+[[ -z "${BASIC_AUTH_USER}" ]] && fail "no rpcuser was provided"
+[[ -z "${BASIC_AUTH_PASSWORD}" ]] && fail "no rpcpassword was provided"
 [[ -z "${CHAIN_NAME}" ]] && fail "no chain name was provided"
 [[ -z "${CERTTYPE}" ]] && fail "no certtype was provided"
 [[ -z "${MODE}" ]] && fail "no deployment mode was provided"
@@ -81,8 +85,6 @@ useradd -m ${MC_OS_USER}
 
 # set additional variables
 EXTERNAL_FLAG="-externalip=${IP}"
-BASIC_AUTH_USER=multichain
-BASIC_AUTH_PASSWORD=$(tr -dc a-zA-Z0-9 < /dev/urandom | fold -w 64 | head -n 1)
 
 MC_RPC_PORT=7999
 MC_P2P_PORT=7000
@@ -476,8 +478,6 @@ PROTOCOL="https"
 echo "#rpcaddr#${PROTOCOL}://${FQDN}#rpcaddr#"
 echo "#dashboard#${PROTOCOL}://${FQDN}/dashboard#dashboard#"
 echo "#p2paddr#${MC_P2P_ENDPOINT}#p2paddr#"
-echo "#authuser#${BASIC_AUTH_USER}#authuser#"
-echo "#authpassword#${BASIC_AUTH_PASSWORD}#authpassword#"
 
 # if using a self-signed certificate, the certificate is provided base64 encoded to the template output
 CERT_BASE64="n/a"
