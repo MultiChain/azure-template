@@ -342,6 +342,36 @@
                         "type": "Microsoft.Common.Section",
                         "elements": [
                             {
+                                "name": "rpcuser",
+                                "label": "RPC username",
+                                "type": "Microsoft.Common.TextBox",
+                                "defaultValue": "multichain",
+                                "toolTip": "This user will be required to send rpc commands to the multichain node via basic authentication. The same user is required to log into the dashboard.",
+                                "constraints": {
+                                    "required": true,
+                                    "regex": "^[a-zA-Z0-9-_]+$",
+                                    "validationMessage": "Only alphanumeric characters and 'dash', 'underscore' are allowed."
+                                }
+                            },
+                            {
+                                "name": "rpcpassword",
+                                "type": "Microsoft.Common.PasswordBox",
+                                "label": {
+                                  "password": "RPC password",
+                                  "confirmPassword": "Confirm RPC password"
+                                },
+                                "toolTip": "This password will be required to send rpc commands to the multichain node via basic authentication. The same password is required to log into the dashboard.",
+                                "constraints": {
+                                  "required": true,
+                                  "regex": "^[a-zA-Z0-9]{12,}$",
+                                  "validationMessage": "Password must be at least 12 characters long and contain only alphanumeric characters"
+                                },
+                                "options": {
+                                  "hideConfirmation": false
+                                },
+                                "visible": true
+                            },
+                            {
                                 "name": "certificate",
                                 "label": "TLS Certificate Type",
                                 "type": "Microsoft.Common.OptionsGroup",
@@ -427,6 +457,8 @@
             "disksize": "[steps('resources').disk.disksize]",
             "domainNameLabel": "[steps('resources').network.config.domainNameLabel]",
             "mode": "[steps('multichain').basic.mode]",
+            "rpcuser": "[steps('multichain').security.rpcuser]",
+            "rpcpassword": "[steps('multichain').security.rpcpassword]",
             "chain_name": "[steps('multichain').basic.chainname]",
             "chain_description": "[steps('multichain').basic.chaindescription]",
             "seed_node": "[steps('multichain').basic.seednode]",
