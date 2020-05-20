@@ -109,14 +109,14 @@
       "type": "string",
       "defaultValue": "multichain",
       "metadata": {
-        "description": "BasicAuth username for the MultiChain RPC endpoint and the dashboard."
+        "description": "HTTP Basic authentication username for JSON-RPC API and web dashboard."
       }
     },
     "rpcpassword": {
       "type": "securestring",
       "defaultValue": "",
       "metadata": {
-        "description": "BasicAuth password for the MultiChain RPC endpoint and the dashboard."
+        "description": "HTTP Basic authentication password for JSON-RPC API and web dashboard."
       }
     },
     "chain_name": {
