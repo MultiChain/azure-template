@@ -196,7 +196,13 @@ then
       (( i++ > 10 )) && fail "not able to install certbot"
     done
 
-    certbot certonly --agree-tos "${CERTBOT_FLAG}" --domain "${FQDN}" --standalone
+    i=1
+    until certbot certonly --agree-tos "${CERTBOT_FLAG}" --domain "${FQDN}" --standalone
+    do
+      (( i++ > 4 )) && fail "not able to retrieve letsencrypt certificate"
+      sleep 30
+      echo "retry letsencrypt certificate retrieval"
+    done
     SSL_CERT=/etc/letsencrypt/live/${FQDN}/fullchain.pem;
     SSL_KEY=/etc/letsencrypt/live/${FQDN}/privkey.pem;
 
